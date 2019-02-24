@@ -1,4 +1,30 @@
-{}
+
+        parser MyParser(packet_in packet,
+                        out headers hdr,
+                        inout metadata meta,
+                        inout standard_metadata_t standard_metadata) {
+         {
+
+ state start { 
+transition parse_ethernet; 
+}
+ state parse_ipv4 { 
+packet.extract(hdr.ipv4);
+transition select(hdr.ipv4.protocol){
+default:accept; 
+6:parse_tcp; 
+}
+}
+ state parse_tcp { 
+packet.extract(hdr.tcp);
+transition accept; 
+}
+ state parse_ethernet { 
+packet.extract(hdr.ethernet);
+transition accept; 
+}
+}
+
 
 
 control MyIngress(inout headers hdr,
@@ -121,7 +147,6 @@ table send_frame{
 }
         apply {
             shadow.apply();
-
             if(meta.context_control == 1){ 
 if(meta.extension_host_id==1) { 
 

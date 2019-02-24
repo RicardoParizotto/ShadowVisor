@@ -31,7 +31,6 @@ class packet_parser:
     #controls, actions and tables definitions
     def scan_def(self, dic_):
         it_symbols = 0
-
         #ignore whitespaces --
         while self.it_lines < self.code_len and (self.src_code[self.it_lines] == ' ' or self.src_code[self.it_lines] == '\n'):
             self.it_lines = self.it_lines + 1
@@ -53,8 +52,8 @@ class packet_parser:
 
         while True:
             params_ = params_ + self.src_code[self.it_lines]
-            if self.src_code[self.it_lines] == ')': 
-                break     
+            if self.src_code[self.it_lines] == ')':
+                break
             self.it_lines = self.it_lines + 1
         self.it_lines = self.it_lines + 1
 
