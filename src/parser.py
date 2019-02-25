@@ -125,6 +125,7 @@ class parser_control_flow():
                             block = self.parse_codeBlock()
                             self.actions_.append({name : [params,block]})
                 elif(self.scan_def("apply*")):
+                    if(block_name == 'MyDeparser')
                     self.apply_[block_name] = self.parse_codeBlock()
             self.it_lines = self.it_lines + 1
 
@@ -133,7 +134,6 @@ class parser_control_flow():
         while self.it_lines < self.code_len:
             if(self.src_code[self.it_lines] == 'c'):
                 if(self.scan_def("control*")):
-                    print('entroussss')
                     name = self.parse_name()
                     params = self.parse_params()
                     block = self.scan_control_block(name)
