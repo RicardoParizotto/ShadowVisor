@@ -1,6 +1,6 @@
 import sys
 
-from p4module import load_P4module
+from parser import parser_control_flow
 from assembler import assemble_P4
 
 class commandline:
@@ -11,6 +11,7 @@ class commandline:
         self.params_ = []
         self.selects_ = {}
         self.extract_ = {}
+        self.headers_ = {}
 
         self.init_catalogue()
 
@@ -93,27 +94,26 @@ class commandline:
         f = open(file, 'r')
         return f.read()
 
+    #TODO reorder transitions 
     def parser_union(self, module):
-        for item in module.parser.parser_:
+        for item in module.load.parser_:
             if not item in self.parser_:
-                self.parser_[item] = module.parser.parser_[item]
+                self.parser_[item] = module.load.parser_[item]
                 print(str(self.parser_[item]) + '\n')
             else:
-                for transition in module.parser.parser_[item]:
+                for transition in module.load.parser_[item]:
                     if not transition in self.parser_[item]:
                         self.parser_[item].add(transition)
                         print(str(transition) + '\n')
 
-        for item in module.parser.selects_:
-            print('teste\n')
+        for item in module.load.selects_:
             if not item in self.selects_:
-                self.selects_[item] = module.parser.selects_[item]
+                self.selects_[item] = module.load.selects_[item]
 
-        for item in module.parser.extract_:
-            print('teste2\n')
+        for item in module.load.extract_:
             if not item in self.extract_:
-                self.extract_[item] = module.parser.extract_[item]
-        print('union of packet parser')
+                self.extract_[item] = module.load.extract_[item]
+
 
     #just calculates de union of table definitions
     def table_union(self, module):
@@ -121,6 +121,13 @@ class commandline:
 
     def action_union(self, module):
         self.actions_ = self.actions_ + module.actions_
+
+    def header_union(self, module):
+        for item in module.load.headers_:
+            if not item in self.headers_:
+                print('DEBUGEEER MASTER')
+                self.headers_[item] = module.load.headers_[item]
+
 
     #this only make unions of the constructors of both the host and the extension
     def carry_composition(self, module):
@@ -130,7 +137,9 @@ class commandline:
             self.parser_union(module)
             self.table_union(module.load)
             self.action_union(module.load)
+            self.header_union(module)
         return module
+
 
     def write_composition_(self, skeleton):
         #if sequential composition the extension id is always 1. Different ids can be used to
@@ -142,4 +151,4 @@ class commandline:
 
         #concatenate applys from the host and the extension
         assembler = assemble_P4()
-        assembler.assemble_new_program(self.build_parser_extension(), self.actions_, self.tables_, self.applys)
+        assembler.assemble_new_program(self.headers_, self.build_parser_extension(), self.actions_, self.tables_, self.applys)
