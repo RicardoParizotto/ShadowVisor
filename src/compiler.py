@@ -1,7 +1,7 @@
 import sys
 
-from parser import parser_control_flow
 from assembler import assemble_P4
+from p4module import load_P4module
 
 class commandline:
     def __init__(self):
@@ -43,6 +43,19 @@ class commandline:
         apply {
             shadow.apply();
             if(meta.context_control == 1){ \n"""
+
+    '''
+    carry the operators from the modules already parsed and composed
+    it also open a module if it
+    '''
+    def carry_composition(self, module):
+        if not isinstance(module, load_P4module):
+            module = load_P4module(module)
+            self.parser_union(module)
+            self.table_union(module.load)
+            self.action_union(module.load)
+            self.header_union(module)
+        return module
 
     def build_parser_extension(self):
         #remember that packet extracts are optinal
@@ -90,11 +103,7 @@ class commandline:
                 }
             """
 
-    def read_file(self, file):
-        f = open(file, 'r')
-        return f.read()
-
-    #TODO reorder transitions 
+    #TODO reorder transitions
     def parser_union(self, module):
         for item in module.load.parser_:
             if not item in self.parser_:
@@ -125,26 +134,12 @@ class commandline:
     def header_union(self, module):
         for item in module.load.headers_:
             if not item in self.headers_:
-                print('DEBUGEEER MASTER')
                 self.headers_[item] = module.load.headers_[item]
-
-
-    #this only make unions of the constructors of both the host and the extension
-    def carry_composition(self, module):
-        if not isinstance(module, load_P4module):
-            #union of parsers???  todo
-            module = load_P4module(self.read_file(module))
-            self.parser_union(module)
-            self.table_union(module.load)
-            self.action_union(module.load)
-            self.header_union(module)
-        return module
-
 
     def write_composition_(self, skeleton):
         #if sequential composition the extension id is always 1. Different ids can be used to
         #point to more modules
-        self.applys = self.applys + skeleton +"""
+        self.applys = self.applys + str(skeleton) +"""
             }
         }
         """

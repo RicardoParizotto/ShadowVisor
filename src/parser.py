@@ -22,7 +22,6 @@ class parser_control_flow():
         self.code_len = len(src_p4)
         self.scan_control()
 
-
     def parse_name(self):
         _name = ""
         while self.it_lines < self.code_len:
@@ -76,7 +75,6 @@ class parser_control_flow():
                 break
             self.it_lines = self.it_lines + 1
         self.it_lines = self.it_lines + 1
-
         return params_
 
     #just load a block between '{' and '}'
@@ -125,7 +123,8 @@ class parser_control_flow():
                             block = self.parse_codeBlock()
                             self.actions_.append({name : [params,block]})
                 elif(self.scan_def("apply*")):
-                    if(block_name == 'MyDeparser')
+                    #we need a different parsing for deparsersself.TODO TODO TODO
+                    #if(block_name == 'MyDeparser'):
                     self.apply_[block_name] = self.parse_codeBlock()
             self.it_lines = self.it_lines + 1
 
@@ -153,10 +152,7 @@ class parser_control_flow():
                     header = self.parse_codeBlock()
                     self.structs_[name] = header
 
-
-
             self.it_lines = self.it_lines + 1
-
 
     def scan_parse_control(self):
         colchetes = 0
@@ -214,7 +210,7 @@ class parser_control_flow():
             self.parse_select(state)
         else: #no selects implicates one single transition
             self.parser_[state]['*'] = name
-        #self.parse_till_symbol('}')
+
 
     def parse_stateBlock(self, state_id):
         '''
@@ -222,7 +218,6 @@ class parser_control_flow():
         #in case there is a packet extraction we need to save it
         #the need to save it is to rewrite the code
         #and also to search for non-determinism
-        #FUTURE TODO HUEHUEBRBR SCIENCE WORKS:
         #there is a need to read lookahead too
         '''
         car = self.src_code[self.it_lines]
