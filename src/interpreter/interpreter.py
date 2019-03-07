@@ -12,7 +12,7 @@ class commandline:
         self.selects_ = {}
         self.extract_ = {}
         self.headers_ = {}
-
+        self.emit_ = []
         self.init_catalogue()
 
     def init_catalogue(self):
@@ -55,6 +55,7 @@ class commandline:
             self.table_union(module.load)
             self.action_union(module.load)
             self.header_union(module)
+            self.deparser_union(module)
         return module
 
     def build_parser_extension(self):
@@ -86,8 +87,8 @@ class commandline:
 
         return parser_def
 
-
     def calc_sequential_(self, host, extension):
+        print(host.name + extension.name)
         return  """if(meta.extension_""" + "host_id" + """==1) { \n
                     """ + ''.join(map(str, host.load.apply_['MyIngress'])) + """
                 }if(meta.extension_""" + "host_id" + """==666){
@@ -103,17 +104,23 @@ class commandline:
                 }
             """
 
+    def deparser_union(self, module):
+        #TODO reorder transitions
+        for item in module.load.emit_:
+            print(item)
+            if not item in self.emit_:
+                self.emit_.append(item)
+
+
     #TODO reorder transitions
     def parser_union(self, module):
         for item in module.load.parser_:
             if not item in self.parser_:
                 self.parser_[item] = module.load.parser_[item]
-                print(str(self.parser_[item]) + '\n')
             else:
                 for transition in module.load.parser_[item]:
                     if not transition in self.parser_[item]:
                         self.parser_[item].add(transition)
-                        print(str(transition) + '\n')
 
         for item in module.load.selects_:
             if not item in self.selects_:
@@ -122,7 +129,6 @@ class commandline:
         for item in module.load.extract_:
             if not item in self.extract_:
                 self.extract_[item] = module.load.extract_[item]
-
 
     #just calculates de union of table definitions
     def table_union(self, module):
@@ -146,4 +152,4 @@ class commandline:
 
         #concatenate applys from the host and the extension
         assembler = assemble_P4()
-        assembler.assemble_new_program(self.headers_, self.build_parser_extension(), self.actions_, self.tables_, self.applys)
+        assembler.assemble_new_program(self.headers_, self.build_parser_extension(), self.actions_, self.tables_, self.applys, self.emit_)

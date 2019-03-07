@@ -14,11 +14,11 @@ import sys
 
 
 sys.path.insert(0, "../ply-3.11/")
+sys.path.insert(0, "interpreter/")
 
 import ply.lex as lex
 import ply.yacc as yacc
-
-from compiler import commandline
+from interpreter import commandline
 
 if sys.version_info[0] >= 3:
     raw_input = input

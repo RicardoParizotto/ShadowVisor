@@ -1,14 +1,14 @@
 class parser_control_flow():
 
     tables_= []        #list of tables. I think that a dict would be efficiently
-    actions_ = []      #list of actions. Same for dict...
-    apply_ = {}        #a dic of every apply found on each control. The control id is the dic index
+    actions_ = []      #list of actions. Same for dict...    
     parser_ = {}        #dic of states of the parser. Each state maps to a list of attributes
     params_ = []
     selects_ = {}
     extract_ = {}
     headers_ = {}
     structs_ = {}
+    emit_ = []
 
     #init structures to help the scanning process
     def __init__(self, src_p4):
@@ -20,6 +20,7 @@ class parser_control_flow():
         self.it_symbols = 0
         self.src_code = src_p4
         self.code_len = len(src_p4)
+        self.apply_ = {}         #a dic of every apply found on each control. The control id is the dic index
         self.scan_control()
 
     def parse_name(self):
@@ -33,7 +34,6 @@ class parser_control_flow():
             self.it_lines = self.it_lines + 1
         return _name.strip()
 
-
     def parse_till_symbol(self, symbol):
         _name = ""
         while self.it_lines < self.code_len:
@@ -44,7 +44,6 @@ class parser_control_flow():
                 break
             self.it_lines = self.it_lines + 1
         return _name.strip()
-
 
     #scan constructs that have identificator such as
     #controls, actions and tables definitions
@@ -93,11 +92,13 @@ class parser_control_flow():
                    return local_buffer
                else:
                    colchetes = colchetes - 1
-            local_buffer.append(self.src_code[self.it_lines])
+            else:
+                local_buffer.append(self.src_code[self.it_lines])
             self.it_lines = self.it_lines + 1
         return -1
 
     def scan_control_block(self, block_name):
+        """transition = '{' table | action | apply '}' """
         colchetes = 0
 
         while self.it_lines < self.code_len:
@@ -123,13 +124,27 @@ class parser_control_flow():
                             block = self.parse_codeBlock()
                             self.actions_.append({name : [params,block]})
                 elif(self.scan_def("apply*")):
-                    #we need a different parsing for deparsersself.TODO TODO TODO
-                    #if(block_name == 'MyDeparser'):
-                    self.apply_[block_name] = self.parse_codeBlock()
+                    if(block_name == 'MyDeparser'):
+                        self.scan_deparser()
+                    else:
+                        self.apply_[block_name] = self.parse_codeBlock()
+            self.it_lines = self.it_lines + 1
+
+    def scan_deparser(self):
+        'packet.extract ( header name )'
+
+        while self.it_lines < self.code_len:
+            if(self.src_code[self.it_lines] == '}'):
+                return
+            if(self.scan_def('packet.emit*')):
+                self.emit_.append(self.parse_params())
+                self.parse_till_symbol(';')
             self.it_lines = self.it_lines + 1
 
     #scan the construct inside a control or parsers
     def scan_control(self):
+        """transition := control | parser | header | struct """
+
         while self.it_lines < self.code_len:
             if(self.src_code[self.it_lines] == 'c'):
                 if(self.scan_def("control*")):
@@ -151,20 +166,19 @@ class parser_control_flow():
                     name = self.parse_name()
                     header = self.parse_codeBlock()
                     self.structs_[name] = header
-
             self.it_lines = self.it_lines + 1
 
     def scan_parse_control(self):
         colchetes = 0
         while self.it_lines < self.code_len:
             if(self.src_code[self.it_lines] == '}'):
+                self.it_lines = self.it_lines + 1
                 return #magic
             elif(self.scan_def("state*")):
                 name = self.parse_name()
                 self.parser_[name] = {}
                 self.parse_stateBlock(name)
             self.it_lines = self.it_lines + 1
-
     '''
     this method scan the transtions inside a select
     it ignores whitespaces and newlines marks
@@ -230,7 +244,7 @@ class parser_control_flow():
             if(self.scan_def('packet.extract*')):
                 #need to save packet extract params to rewrite the code
                 params = self.parse_params()
-                self.extract_[state_id] = params   #GENIUS
+                self.extract_[state_id] = params  
                 self.parse_till_symbol(';')
                 self.it_lines = self.it_lines + 1
         if(self.scan_def('transition*')):
