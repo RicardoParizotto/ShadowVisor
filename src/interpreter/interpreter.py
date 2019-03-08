@@ -18,10 +18,27 @@ class commandline:
         self.init_catalogue()
 
     def init_catalogue(self):
+        self.applys = """
+        apply {
+            shadow.apply();
+            if(meta.context_control == 1){ \n"""
+
+
+    def end_composition(self):
         catalogue = """{
-         meta.context_control = 1;
-         meta.extension_id1 = prog;
-        } """
+         meta.context_control = 1;\n"""
+
+        catalogue_params = "("
+
+        for i in range(1, (self.program+1)):
+            catalogue = catalogue + "meta.extension_id" + str(i) + " = prog" + str(i) + ";\n"
+            catalogue_params = catalogue_params + "egressSpec_t prog" +str(i)
+            #gambia
+            if (i != self.program):
+                catalogue_params = catalogue_params + ","    
+
+        catalogue_params = catalogue_params + (')')
+        catalogue = catalogue + "}"
 
         shadow = """{
            key = {
@@ -38,13 +55,8 @@ class commandline:
         #more param to the set_chatining
         #i read this comment now and i dont understand it anymore
         #i will keep it here for artistic purposes
-        self.actions_.append({'set_chaining': ['(egressSpec_t prog)', catalogue]})
+        self.actions_.append({'set_chaining': [catalogue_params, catalogue]})
         self.tables_.append({'shadow':shadow})
-
-        self.applys = """
-        apply {
-            shadow.apply();
-            if(meta.context_control == 1){ \n"""
 
     '''
     carry the operators from the modules already parsed and composed
@@ -80,7 +92,7 @@ class commandline:
                 parser_def = parser_def + 'transition select' + str(self.selects_[item] + '{\n')
             for transition in self.parser_[item]:
                 if(transition == '*'):
-                    parser_def = parser_def + 'transition ' + str(self.parser_[item]['*']) + """; \n"""
+                    parser_def = parser_def + 'transition ' + str(self.parser_[item]['*']) + """;\n"""
                 else:
                     parser_def = parser_def + str(transition) + ':' + str(self.parser_[item][transition]) + """; \n"""
             if(item in self.selects_):
@@ -154,6 +166,9 @@ class commandline:
     def write_composition_(self, skeleton):
         #if sequential composition the extension id is always 1. Different ids can be used to
         #point to more modules
+
+        self.end_composition()
+
         self.applys = self.applys + str(skeleton) +"""
             }
         }
