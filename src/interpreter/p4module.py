@@ -7,8 +7,9 @@ class load_P4module:
     tables_ = []
     actions_ = []
 
-    def __init__(self, module):
+    def __init__(self, module, module_id):
     	self.name = module
+    	self.module_id = module_id
         self.load = parser_control_flow(self.read_file(module))
 
     def read_file(self, file):

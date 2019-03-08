@@ -5,6 +5,7 @@ from p4module import load_P4module
 
 class commandline:
     def __init__(self):
+        self.program = 0
         self.tables_ = []
         self.actions_ = []
         self.parser_ = {}        #dic of states of the parser. Each state maps to a list of attributes
@@ -12,6 +13,7 @@ class commandline:
         self.selects_ = {}
         self.extract_ = {}
         self.headers_ = {}
+        self.structs_ = {}
         self.emit_ = []
         self.init_catalogue()
 
@@ -50,7 +52,9 @@ class commandline:
     '''
     def carry_composition(self, module):
         if not isinstance(module, load_P4module):
-            module = load_P4module(module)
+            self.program = self.program + 1
+            module = load_P4module(module, self.program)
+            self.struct_union(module)
             self.parser_union(module)
             self.table_union(module.load)
             self.action_union(module.load)
@@ -65,8 +69,7 @@ class commandline:
         parser MyParser(packet_in packet,
                         out headers hdr,
                         inout metadata meta,
-                        inout standard_metadata_t standard_metadata) {
-         {\n\n"""
+                        inout standard_metadata_t standard_metadata) {\n\n"""
 
         for item in self.parser_:
             parser_def = parser_def + """ state """ + item + """ { \n"""
@@ -95,7 +98,6 @@ class commandline:
                     """ + ''.join(map(str, extension.load.apply_['MyIngress'])) + """
                 }
             """
-    #TODO
     def calc_parallel_(self, host, extension):
         return  """if(meta.extension_""" + "host_id" + """==1) { \n
                     """ + ''.join(map(str, host.apply_['MyIngress'])) + """
@@ -104,13 +106,16 @@ class commandline:
                 }
             """
 
+    def struct_union(self, module):
+        for item in module.load.structs_:
+            if not item in self.structs_:
+                self.structs_[item] = module.load.structs_[item]
+
     def deparser_union(self, module):
         #TODO reorder transitions
         for item in module.load.emit_:
-            print(item)
             if not item in self.emit_:
                 self.emit_.append(item)
-
 
     #TODO reorder transitions
     def parser_union(self, module):
@@ -132,10 +137,14 @@ class commandline:
 
     #just calculates de union of table definitions
     def table_union(self, module):
-        self.tables_ = self.tables_ + module.tables_
+        for item in module.tables_:
+            if not item in self.tables_:
+                self.tables_.append(item)
 
     def action_union(self, module):
-        self.actions_ = self.actions_ + module.actions_
+        for item in module.actions_:
+            if not item in self.actions_:
+                self.actions_.append(item)
 
     def header_union(self, module):
         for item in module.load.headers_:
@@ -149,7 +158,6 @@ class commandline:
             }
         }
         """
-
         #concatenate applys from the host and the extension
         assembler = assemble_P4()
-        assembler.assemble_new_program(self.headers_, self.build_parser_extension(), self.actions_, self.tables_, self.applys, self.emit_)
+        assembler.assemble_new_program( self.headers_, self.structs_, self.build_parser_extension(), self.actions_, self.tables_, self.applys, self.emit_)

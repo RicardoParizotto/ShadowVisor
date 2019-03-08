@@ -92,8 +92,8 @@ class parser_control_flow():
                    return local_buffer
                else:
                    colchetes = colchetes - 1
-            else:
-                local_buffer.append(self.src_code[self.it_lines])
+
+            local_buffer.append(self.src_code[self.it_lines])
             self.it_lines = self.it_lines + 1
         return -1
 
