@@ -33,12 +33,14 @@ class commandline:
         for i in range(1, (self.program+1)):
             catalogue = catalogue + "meta.extension_id" + str(i) + " = prog" + str(i) + ";\n"
             catalogue_params = catalogue_params + "egressSpec_t prog" +str(i)
+
+            self.structs_['metadata'].append({'bit<9>': 'prog'+str(i)})
             #gambia
             if (i != self.program):
                 catalogue_params = catalogue_params + ","    
 
         catalogue_params = catalogue_params + (')')
-        catalogue = catalogue + "}"
+        catalogue = catalogue + "}\n"
 
         shadow = """{
            key = {
@@ -57,6 +59,8 @@ class commandline:
         #i will keep it here for artistic purposes
         self.actions_.append({'set_chaining': [catalogue_params, catalogue]})
         self.tables_.append({'shadow':shadow})
+
+        self.structs_['metadata'].append({'bit<9>': 'context_control'})
 
     '''
     carry the operators from the modules already parsed and composed
@@ -103,17 +107,17 @@ class commandline:
         return parser_def
 
     def calc_sequential_(self, host, extension):
-        print(host.name + extension.name)
-        return  """if(meta.extension_""" + "host_id" + """==1) { \n
+        #print(host.name + extension.name)
+        return  """if(meta.prog""" + str(host.module_id) + """==1) { \n
                     """ + ''.join(map(str, host.load.apply_['MyIngress'])) + """
-                }if(meta.extension_""" + "host_id" + """==666){
+                }if(meta.prog""" + str(extension.module_id) + """==1){
                     """ + ''.join(map(str, extension.load.apply_['MyIngress'])) + """
                 }
             """
     def calc_parallel_(self, host, extension):
-        return  """if(meta.extension_""" + "host_id" + """==1) { \n
+        return  """if(meta.extension_""" + str(host.module_id)  + """==1) { \n
                     """ + ''.join(map(str, host.apply_['MyIngress'])) + """
-                }if(meta.extension_""" + "host_id" + """==666){
+                }else if(meta.extension_""" + str(extension.module_id) + """==1){
                     """ + ''.join(map(str, extension.apply_['MyIngress'])) + """
                 }
             """
@@ -122,6 +126,10 @@ class commandline:
         for item in module.load.structs_:
             if not item in self.structs_:
                 self.structs_[item] = module.load.structs_[item]
+            else:
+                for transition in module.load.structs_[item]:
+                    if not transition in self.structs_[item]:
+                        self.structs_[item].append(transition)
 
     def deparser_union(self, module):
         #TODO reorder transitions

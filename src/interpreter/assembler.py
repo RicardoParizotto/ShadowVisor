@@ -7,10 +7,7 @@ class assemble_P4:
     '''
     def assemble_new_program(self, headers, structs, parser, actions, tables, control_flow, emit_attr):
         with open('composition.p4', 'w') as f:
-            '''
-            TODO
-            make the includes and defs a dynamical thing
-            that is: parse through the modules and '''    
+ 
             defs = """
 #include <core.p4>
 #include <v1model.p4> 
@@ -27,7 +24,12 @@ typedef bit<32> ip4Addr_t;\n\n\n
                 f.write('%s' % 'header ' + str(item) + ''.join(map(str, headers[item])) + '\n\n')
 
             for item in structs:
-                f.write('%s' % 'struct ' + str(item) + ''.join(map(str, structs[item])) + '\n\n')
+                f.write('%s' % 'struct ' + str(item) + '{\n')
+                for transition in structs[item]:
+                    for key in transition:
+                        if(''.join(map(str,key)) != ' '):
+                            f.write("%s" % key + " " + transition[key] + ';' + '\n')
+                f.write('}\n\n')      
 
             f.write("%s" % parser)
 

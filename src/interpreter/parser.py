@@ -34,6 +34,19 @@ class parser_control_flow():
             self.it_lines = self.it_lines + 1
         return _name.strip()
 
+    def scan_type(self):
+        _type = ""
+        while self.it_lines < self.code_len:
+            it = self.src_code[self.it_lines]
+            if(it != '{' and it != '(' and it != ';' and it != ' '):
+                _type = _type + it
+            else:
+                break
+            self.it_lines = self.it_lines + 1
+        print(_type)
+        return _type.strip()
+
+
     def parse_till_symbol(self, symbol):
         _name = ""
         while self.it_lines < self.code_len:
@@ -130,6 +143,26 @@ class parser_control_flow():
                         self.apply_[block_name] = self.parse_codeBlock()
             self.it_lines = self.it_lines + 1
 
+    def scan_struct(self, name):
+        """struct := '{' vars '}'"""
+        """vars := var_type var_name ';' | vars | e"""
+
+        self.parse_till_symbol('{')
+        self.it_lines = self.it_lines + 1
+
+        while self.it_lines < self.code_len:
+            if(self.src_code[self.it_lines] == '}'):
+                self.it_lines = self.it_lines + 1
+                return
+            if(self.src_code[self.it_lines] == ' ' or self.src_code[self.it_lines] == '\n'):
+                self.it_lines = self.it_lines + 1
+                continue
+            var_type = self.scan_type()
+            var_name = self.parse_name()
+            self.parse_till_symbol(';')
+            self.structs_[name].append( { var_type : var_name } )
+            self.it_lines = self.it_lines + 1
+
     def scan_deparser(self):
         'packet.extract ( header name )'
 
@@ -164,8 +197,10 @@ class parser_control_flow():
             elif(self.src_code[self.it_lines] == 's'):
                 if(self.scan_def("struct*")):
                     name = self.parse_name()
-                    header = self.parse_codeBlock()
-                    self.structs_[name] = header
+                    #self.structs_[name] = self.parse_codeBlock()
+                    self.structs_[name] = []
+                    self.scan_struct(name)
+
             self.it_lines = self.it_lines + 1
 
     def scan_parse_control(self):
