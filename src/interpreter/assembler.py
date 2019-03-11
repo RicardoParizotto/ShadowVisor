@@ -33,6 +33,14 @@ typedef bit<32> ip4Addr_t;\n\n\n
 
             f.write("%s" % parser)
 
+
+            verify = """
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
+    apply {  }
+}\n"""
+            
+            f.write("%s" % verify)
+
             control = """\n\n\ncontrol MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {

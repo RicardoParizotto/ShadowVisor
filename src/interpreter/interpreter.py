@@ -31,7 +31,7 @@ class commandline:
         catalogue_params = "("
 
         for i in range(1, (self.program+1)):
-            catalogue = catalogue + "meta.extension_id" + str(i) + " = prog" + str(i) + ";\n"
+            catalogue = catalogue + "meta.prog" + str(i) + " = prog" + str(i) + ";\n"
             catalogue_params = catalogue_params + "egressSpec_t prog" +str(i)
 
             self.structs_['metadata'].append({'bit<9>': 'prog'+str(i)})
@@ -115,9 +115,9 @@ class commandline:
                 }
             """
     def calc_parallel_(self, host, extension):
-        return  """if(meta.extension_""" + str(host.module_id)  + """==1) { \n
+        return  """if(meta.prog""" + str(host.module_id)  + """==1) { \n
                     """ + ''.join(map(str, host.apply_['MyIngress'])) + """
-                }else if(meta.extension_""" + str(extension.module_id) + """==1){
+                }else if(meta.prog""" + str(extension.module_id) + """==1){
                     """ + ''.join(map(str, extension.apply_['MyIngress'])) + """
                 }
             """
