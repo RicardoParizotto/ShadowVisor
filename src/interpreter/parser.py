@@ -23,6 +23,12 @@ class parser_control_flow():
         self.apply_ = {}         #a dic of every apply found on each control. The control id is the dic index
         self.scan_control()
 
+
+    #TODO tomorrow    
+    #def DFS_(self, v):...
+
+
+
     def parse_name(self):
         _name = ""
         while self.it_lines < self.code_len:
