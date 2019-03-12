@@ -23,8 +23,31 @@ class commandline:
             shadow.apply();
             if(meta.context_control == 1){ \n"""
 
+    #TODO tomorrow    
+    #def DFS_(self, v):...
+
+    def verification(self):
+        discovered = []
+        self.loop_finder('start', discovered)
+
+
+    def loop_finder(self, vertex, discovered):
+        discovered.append(vertex)
+        print(vertex)
+        
+        if(vertex != 'accept'):
+            for transition in self.parser_[vertex]:
+                print(self.parser_[vertex][transition])
+                if not self.parser_[vertex][transition] in discovered:
+                    self.loop_finder(self.parser_[vertex][transition], discovered)
+                else:
+                    print('### WARNING-ADM: found loop noob! Uncompatible modules.\n')
+
 
     def end_composition(self):
+
+        self.verification()
+
         catalogue = """{
          meta.context_control = 1;\n"""
 
@@ -61,6 +84,9 @@ class commandline:
         self.tables_.append({'shadow':shadow})
 
         self.structs_['metadata'].append({'bit<9>': 'context_control'})
+
+
+
 
     '''
     carry the operators from the modules already parsed and composed
