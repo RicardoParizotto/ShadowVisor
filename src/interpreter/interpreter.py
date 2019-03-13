@@ -33,19 +33,17 @@ class commandline:
 
     def loop_finder(self, vertex, discovered):
         discovered.append(vertex)
-        print(vertex)
         
+        #vertex is a state of the packet parser
         if(vertex != 'accept'):
             for transition in self.parser_[vertex]:
-                print(self.parser_[vertex][transition])
                 if not self.parser_[vertex][transition] in discovered:
                     self.loop_finder(self.parser_[vertex][transition], discovered)
                 else:
-                    print('### WARNING-ADM: found loop noob! Uncompatible modules.\n')
+                    print('### WARNING-ADM: Loop Found! Uncompatible modules.\n')
 
 
     def end_composition(self):
-
         self.verification()
 
         catalogue = """{
@@ -67,7 +65,7 @@ class commandline:
 
         shadow = """{
            key = {
-              hdr.ethernet.dstAddr: lpm;
+              hdr.ethernet.dstAddr: exact;
            }
            actions = {
                set_chaining;
@@ -84,9 +82,6 @@ class commandline:
         self.tables_.append({'shadow':shadow})
 
         self.structs_['metadata'].append({'bit<9>': 'context_control'})
-
-
-
 
     '''
     carry the operators from the modules already parsed and composed
@@ -171,7 +166,7 @@ class commandline:
             else:
                 for transition in module.load.parser_[item]:
                     if not transition in self.parser_[item]:
-                        self.parser_[item].add(transition)
+                        self.parser_[item][transition] = module.load.parser_[item][transition]
 
         for item in module.load.selects_:
             if not item in self.selects_:

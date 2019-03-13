@@ -5,33 +5,10 @@ typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
 
-
-/*this is perfumaria*/
-const bit<16> TYPE_IPV4 = 0x800;
-
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-struct custom_metadata_t {
-    bit<32> nhop_ipv4;
-    bit<16> hash_val1;
-    bit<16> hash_val2;
-    bit<16> count_val1;
-    bit<16> count_val2;
-    bit<64> ts_val1;
-    bit<64> ts_val2;
-    bit<16> tresh;
-    bit<16> smalltresh;
-    bit<64> ts_aux;
-    bit<64> ts_modulo;
-    bit<64> ts_zone;
-    bit<64> ts_power;
-    bit<64> ts_aux1;
-    bit<64> ts_aux2;
-    bit<64> ts_aux3;
-    bit<64> ts_zone_sz;
-}
 
 header ethernet_t {
     macAddr_t dstAddr;
@@ -73,14 +50,6 @@ header tcp_t {
     bit<16> urgentPtr;
 }
 
-struct metadata {
-    bit<9> extension_id1;
-    bit<9> extension_id2;
-    bit<9> extension_id3;
-    bit<1> context_control;
-    custom_metadata_t custom_metadata;
-}
-
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
@@ -95,31 +64,30 @@ parser MyParser(packet_in packet,
                 out headers hdr,
                 inout metadata meta,
                 inout standard_metadata_t standard_metadata) {
-
     state start {
         transition parse_ethernet;
+    }
+
+    state parse_ipv4 {
+        packet.extract(hdr.ipv4);
+        transition select(hdr.ipv4.protocol) {
+            6: parse_tcp;
+            default: accept;
+        }
     }
 
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4: parse_ipv4;
+            0x800: parse_ipv4;
             default: accept;
-        }
-    }
-
-    state parse_ipv4 {
-        packet.extract(hdr.ipv4);
-        transition select(hdr.ipv4.protocol){
-           6: parse_tcp;
-           default: accept;
         }
     }
 
     state parse_tcp {
         packet.extract(hdr.tcp);
         transition accept;
-    }  
+    }
 }
 
 /*************************************************************************
@@ -159,18 +127,25 @@ control MyIngress(inout headers hdr,
         actions = {
            simple_forward;
            rewrite_ipv4Dst; 
+           drop;
         }
         size = 1024;
-        default_action = NoAction();
+        default_action = drop();
     }
 
     apply {
-        //firewall
-         if(hdr.tcp.isValid()){
-            if(hdr.tcp.ACK == 1 && hdr.tcp.SIN == 1){
-               default_path.apply();
-            } 
-         }
+	 //firewall
+	 if(hdr.tcp.isValid()){
+	    //SYN -- Beginning of the transmition
+	    //FIN -- END of the transmition
+	    //these are mutually exclusive for TCP and we drop it		
+	    if(hdr.tcp.SYN == 1 && hdr.tcp.FIN == 1){
+	       drop();   
+	    }
+	    if(hdr.tcp.SYN == 1){
+	       default_path.apply();
+	    } 
+	 }
     }
 }
 

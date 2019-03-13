@@ -32,7 +32,7 @@ tokens = (
 literals = ['+', '>', '(', ')']
 
 # Tokens
-t_NAME = r'[a-zA-Z_][a-zA-Z0-9_.]*'
+t_NAME = r'[a-zA-Z_][a-zA-Z0-9_./]*'
 
 # Build the lexer
 lex.lex()

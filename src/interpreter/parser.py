@@ -24,12 +24,14 @@ class parser_control_flow():
         self.scan_control()
 
 
-    #TODO tomorrow    
-    #def DFS_(self, v):...
-
-
-
     def parse_name(self):
+        """
+        name
+        : nonTypeName
+        | TYPE
+        | ERROR
+        ;"""
+
         _name = ""
         while self.it_lines < self.code_len:
             it = self.src_code[self.it_lines]
@@ -49,7 +51,6 @@ class parser_control_flow():
             else:
                 break
             self.it_lines = self.it_lines + 1
-        print(_type)
         return _type.strip()
 
 
@@ -118,6 +119,14 @@ class parser_control_flow():
 
     def scan_control_block(self, block_name):
         """transition = '{' table | action | apply '}' """
+        """
+        controlDeclaration
+                : controlTypeDeclaration optConstructorParameters
+                /*no type parameters allowed in controlTypeDeclaration*/
+                '{' controlLocalDeclarations APPLY controlBody '}'
+                ;"""
+
+
         colchetes = 0
 
         while self.it_lines < self.code_len:
@@ -146,7 +155,10 @@ class parser_control_flow():
                     if(block_name == 'MyDeparser'):
                         self.scan_deparser()
                     else:
+                        print('scan maluco' + block_name)
                         self.apply_[block_name] = self.parse_codeBlock()
+                        print('scan maluco fudeu' + block_name)
+                        print (self.apply_[block_name])
             self.it_lines = self.it_lines + 1
 
     def scan_struct(self, name):
@@ -182,7 +194,17 @@ class parser_control_flow():
 
     #scan the construct inside a control or parsers
     def scan_control(self):
-        """transition := control | parser | header | struct """
+        """declaration
+                        : constantDeclaration
+                        | externDeclaration
+                        | actionDeclaration
+                        | parserDeclaration
+                        | typeDeclaration
+                        | controlDeclaration
+                        | instantiation
+                        | errorDeclaration
+                        | matchKindDeclaration
+                        ;"""
 
         while self.it_lines < self.code_len:
             if(self.src_code[self.it_lines] == 'c'):
@@ -276,11 +298,11 @@ class parser_control_flow():
         #there is a need to read lookahead too
         '''
         car = self.src_code[self.it_lines]
+
         while car == ' ' or car == '\n' or car == '{':
             self.it_lines = self.it_lines+1
             car = self.src_code[self.it_lines]
 
-        print(self.src_code[self.it_lines])
         if(self.src_code[self.it_lines] == 'p'):
             if(self.scan_def('packet.extract*')):
                 #need to save packet extract params to rewrite the code
